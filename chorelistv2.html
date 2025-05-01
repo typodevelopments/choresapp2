@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Nail Den – Chore Assignment</title>
+  <style>
+    :root {
+      --bg: #1e1e1e;
+      --text: white;
+      --accent: gold;
+      --card: #2a2a2a;
+    }
+
+    body.light {
+      --bg: #f4f4f4;
+      --text: #222;
+      --accent: #e2b007;
+      --card: #fff;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: black;
+      color: var(--accent);
+      text-align: center;
+      padding: 20px;
+      font-size: 26px;
+    }
+
+    .container {
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    button, input, select {
+      font-family: inherit;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: var(--accent);
+      color: black;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 8px 4px 20px 0;
+    }
+
+    input[type="text"], input[type="number"], select {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin: 5px 0;
+      width: 100%;
+    }
+
+    label {
+      font-weight: bold;
+    }
+
+    .tech-list label {
+      display: block;
+      margin: 6px 0;
+    }
+
+    .chore-card {
+      background-color: var(--card);
+      padding: 12px;
+      margin: 10px 0;
+      border-left: 5px solid var(--accent);
+      border-radius: 5px;
+    }
+
+    .chore-card h4 {
+      margin: 0 0 5px;
+    }
+
+    .chore-card ul {
+      padding-left: 20px;
+      margin: 0;
+    }
+
+    .history-entry {
+      background-color: var(--card);
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+
+    .timestamp {
+      font-size: 13px;
+      color: gray;
+    }
+
+    #sunday-note {
+      color: #00ffcc;
+      margin: 10px 0;
+      display: none;
+      font-style: italic;
+    }
+
+    .section {
+      margin: 30px 0;
+    }
+
+    .flex-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .flex-row > div {
+      flex: 1 1 200px;
+    }
+
+    .edit-section {
+      background-color: var(--card);
+      padding: 15px;
+      border-radius: 6px;
+      margin: 15px 0;
+    }
+
+    .edit-section h3 {
+      margin-top: 0;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+
+    .row input[type="text"], .row input[type="number"] {
+      width: 40%;
+    }
+
+    .toggle-theme {
+      float: right;
+      margin-top: -10px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .password-screen {
+      background: var(--bg);
+      color: var(--text);
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .password-screen input {
+      width: 250px;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 18px;
+      border-radius: 6px;
+      border: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="password-screen" id="loginScreen">
+    <h2>Enter Passcode</h2>
+    <input type="password" id="accessCode" placeholder="Enter password" />
+    <button onclick="checkPassword()">Enter</button>
+  </div>
+
+  <div id="app" class="hidden">
+    <header>
+      The Nail Den – Daily Chore Assignments
+      <button class="toggle-theme" onclick="toggleTheme()">Toggle Theme</button>
+    </header>
+
+    <div class="container">
+      <div class="section">
+        <label>Select Technicians Working Today:</label>
+        <div class="tech-list" id="tech-list"></div>
+        <input type="text" id="newTech" placeholder="Add Technician" />
+        <button onclick="addTechnician()">Add Tech</button>
+        <button onclick="resetTechs()">Reset Tech List</button>
+      </div>
+
+      <div class="section">
+        <button onclick="assignChores()">Assign Chores</button>
+        <div id="sunday-note">Sunday Special Chores Assigned</div>
+        <div id="chore-output"></div>
+        <button onclick="savePDF()">Save PDF</button>
+      </div>
+
+      <div class="section edit-section">
+        <h3>Chore Manager</h3>
+        <div class="flex-row">
+          <div>
+            <label>Chore Name</label>
+            <input type="text" id="choreName">
+          </div>
+          <div>
+            <label>Points</label>
+            <input type="number" id="chorePoints" min="1">
+          </div>
+          <div>
+            <label>Category</label>
+            <select id="choreType">
+              <option value="daily">Daily</option>
+              <option value="everyOther">Every Other Day</option>
+              <option value="weekly">Weekly</option>
+              <option value="asNeeded">As Needed</option>
+            </select>
+          </div>
+        </div>
+        <button onclick="addChore()">Add Chore</button>
+        <button onclick="resetChores()">Reset Chore List</button>
+        <div id="chore-list"></div>
+      </div>
+
+      <div class="section">
+        <h3>History Log</h3>
+        <div id="history-log"></div>
+      </div>
+    </div>
+  </div>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+<script>
+const PASSWORD = "chorelist";
+let techs = JSON.parse(localStorage.getItem("techs")) || ["Caneisha", "Cristel", "Keniyra", "Lela", "Alexis", "Michelle"];
+let chores = JSON.parse(localStorage.getItem("chores")) || {
+  daily: [
+    { name: "Replace Barbicide", points: 1 },
+    { name: "Clean Bathroom", points: 4 },
+    { name: "Put Implements in Sterilizer Pouch", points: 2 },
+    { name: "Prep Hot Towels", points: 2 },
+    { name: "Towel Warmer (manage/setup)", points: 1 },
+    { name: "Sweep and Mop", points: 5 },
+    { name: "Take Out Trash", points: 2 },
+    { name: "Dusting", points: 2 },
+    { name: "Clean Coffee Area", points: 2 },
+    { name: "Put Polish Back", points: 3 },
+    { name: "Clean Brushes", points: 2 },
+    { name: "Clean Prep Sink", points: 2 }
+  ],
+  everyOther: [
+    { name: "Wash Towels", points: 2 },
+    { name: "Fold Towels", points: 3 },
+    { name: "Clean Back Room", points: 4 }
+  ],
+  weekly: [
+    { name: "Clean Fridge", points: 3 },
+    { name: "Clean Pedi Carts", points: 4 },
+    { name: "Stack Sugar Scrubs", points: 2 },
+    { name: "Sunday Trash", points: 3 },
+    { name: "Put Trash Bin Back on Monday", points: 3 }
+  ],
+  asNeeded: [
+    { name: "Clean Steamer", points: 1 }
+  ]
+};
+
+function checkPassword() {
+  const input = document.getElementById("accessCode").value;
+  if (input === PASSWORD) {
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("app").classList.remove("hidden");
+    renderTechList();
+    renderChoreManager();
+  } else {
+    alert("Incorrect password");
+  }
+}
+
+function toggleTheme() {
+  const isLight = document.body.classList.toggle("light");
+  localStorage.setItem("theme", isLight ? "light" : "dark");
+}
+
+function loadTheme() {
+  const saved = localStorage.getItem("theme");
+  if (saved === "light") document.body.classList.add("light");
+}
+loadTheme();
+
+function renderTechList() {
+  const container = document.getElementById("tech-list");
+  container.innerHTML = "";
+  techs.forEach(name => {
+    const div = document.createElement("label");
+    div.innerHTML = `<input type="checkbox" value="${name}" /> ${name} <button onclick="deleteTech('${name}')">❌</button>`;
+    container.appendChild(div);
+  });
+}
+
+function addTechnician() {
+  const input = document.getElementById("newTech");
+  const name = input.value.trim();
+  if (!name || techs.includes(name)) return;
+  techs.push(name);
+  input.value = "";
+  localStorage.setItem("techs", JSON.stringify(techs));
+  renderTechList();
+}
+
+function deleteTech(name) {
+  if (!confirm(`Remove ${name}?`)) return;
+  techs = techs.filter(t => t !== name);
+  localStorage.setItem("techs", JSON.stringify(techs));
+  renderTechList();
+}
+
+function resetTechs() {
+  if (!confirm("Reset tech list to default?")) return;
+  techs = ["Caneisha", "Cristel", "Keniyra", "Lela", "Alexis", "Michelle"];
+  localStorage.setItem("techs", JSON.stringify(techs));
+  renderTechList();
+}
+
+function assignChores() {
+  const checked = Array.from(document.querySelectorAll('#tech-list input:checked'));
+  if (checked.length === 0) return alert("Select at least one tech.");
+  const techList = checked.map(cb => cb.value);
+  const day = new Date().getDay(); // Sunday = 0
+  const sundayNote = document.getElementById("sunday-note");
+  sundayNote.style.display = (day === 0) ? "block" : "none";
+
+  let all = [...chores.daily, ...chores.everyOther, ...chores.weekly.filter(c => {
+    if (c.name === "Sunday Trash") return day === 0;
+    if (c.name === "Put Trash Bin Back on Monday") return day === 1;
+    return true;
+  }), ...chores.asNeeded];
+
+  all = all.sort(() => Math.random() - 0.5);
+  const assignments = {};
+  techList.forEach(t => assignments[t] = { chores: [], total: 0 });
+
+  all.forEach(chore => {
+    const next = techList.sort((a, b) => assignments[a].total - assignments[b].total)[0];
+    assignments[next].chores.push(`${chore.name} (${chore.points} pts)`);
+    assignments[next].total += chore.points;
+  });
+
+  const output = document.getElementById("chore-output");
+  output.innerHTML = "";
+  techList.forEach(name => {
+    const card = document.createElement("div");
+    card.className = "chore-card";
+    card.innerHTML = `<h4>${name}</h4><ul>${assignments[name].chores.map(c => `<li>${c}</li>`).join("")}</ul>`;
+    output.appendChild(card);
+  });
+
+  const timestamp = new Date().toLocaleString('en-US', { weekday: 'long', hour: 'numeric', minute: '2-digit' });
+  const log = document.createElement("div");
+  log.className = "history-entry";
+  log.innerHTML = `<div class="timestamp">${timestamp}</div>${output.innerHTML}`;
+  document.getElementById("history-log").prepend(log);
+}
+
+function savePDF() {
+  const element = document.getElementById("chore-output");
+  const date = new Date().toISOString().split("T")[0];
+  const opt = {
+    margin: 0.5,
+    filename: `ChoreAssignments-${date}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+  };
+  html2pdf().from(element).set(opt).save();
+}
+
+function renderChoreManager() {
+  const list = document.getElementById("chore-list");
+  list.innerHTML = "";
+  for (const type in chores) {
+    const section = document.createElement("div");
+    section.innerHTML = `<h4 style="margin-top:15px">${type.charAt(0).toUpperCase() + type.slice(1)}</h4>`;
+    chores[type].forEach((chore, i) => {
+      const row = document.createElement("div");
+      row.className = "row";
+      row.innerHTML = `
+        <input type="text" value="${chore.name}" onchange="updateChore('${type}', ${i}, 'name', this.value)" />
+        <input type="number" value="${chore.points}" onchange="updateChore('${type}', ${i}, 'points', this.value)" />
+        <button onclick="deleteChore('${type}', ${i})">❌</button>`;
+      section.appendChild(row);
+    });
+    list.appendChild(section);
+  }
+}
+
+function updateChore(type, index, field, value) {
+  chores[type][index][field] = (field === "points") ? parseInt(value) : value;
+  localStorage.setItem("chores", JSON.stringify(chores));
+}
+
+function deleteChore(type, index) {
+  if (!confirm("Delete this chore?")) return;
+  chores[type].splice(index, 1);
+  localStorage.setItem("chores", JSON.stringify(chores));
+  renderChoreManager();
+}
+
+function addChore() {
+  const name = document.getElementById("choreName").value.trim();
+  const points = parseInt(document.getElementById("chorePoints").value);
+  const type = document.getElementById("choreType").value;
+  if (!name || !points || !type) return;
+  chores[type].push({ name, points });
+  localStorage.setItem("chores", JSON.stringify(chores));
+  document.getElementById("choreName").value = "";
+  document.getElementById("chorePoints").value = "";
+  renderChoreManager();
+}
+
+function resetChores() {
+  if (!confirm("Reset all chores to default?")) return;
+  localStorage.removeItem("chores");
+  location.reload();
+}
+</script>
+</body>
+</html>
